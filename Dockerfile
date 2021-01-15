@@ -6,23 +6,26 @@ RUN apk add --no-cache \
 		openssh-client
 RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 
-ENV DOCKER_VERSION 20.10.0
+ENV DOCKER_VERSION 19.03.13
+# TODO ENV DOCKER_SHA256
+# https://github.com/docker/docker-ce/blob/5b073ee2cf564edee5adca05eee574142f7627bb/components/packaging/static/hash_files !!
+# (no SHA file artifacts on download.docker.com yet as of 2017-06-07 though)
 
 RUN set -eux; \
 	\
 	apkArch="$(apk --print-arch)"; \
 	case "$apkArch" in \
 		'x86_64') \
-			url='https://download.docker.com/linux/static/stable/x86_64/docker-20.10.0.tgz'; \
+			url='https://download.docker.com/linux/static/stable/x86_64/docker-19.03.13.tgz'; \
 			;; \
 		'armhf') \
-			url='https://download.docker.com/linux/static/stable/armel/docker-20.10.0.tgz'; \
+			url='https://download.docker.com/linux/static/stable/armel/docker-19.03.13.tgz'; \
 			;; \
 		'armv7') \
-			url='https://download.docker.com/linux/static/stable/armhf/docker-20.10.0.tgz'; \
+			url='https://download.docker.com/linux/static/stable/armhf/docker-19.03.13.tgz'; \
 			;; \
 		'aarch64') \
-			url='https://download.docker.com/linux/static/stable/aarch64/docker-20.10.0.tgz'; \
+			url='https://download.docker.com/linux/static/stable/aarch64/docker-19.03.13.tgz'; \
 			;; \
 		*) echo >&2 "error: unsupported architecture ($apkArch)"; exit 1 ;; \
 	esac; \
