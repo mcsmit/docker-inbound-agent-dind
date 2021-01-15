@@ -83,6 +83,7 @@ RUN set -eux; \
 
 COPY dockerd-entrypoint.sh /usr/local/bin/
 
+
 VOLUME /var/lib/docker
 
 # dind Dockerfile End
@@ -136,5 +137,6 @@ VOLUME /var/lib/docker
 # COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 CMD ["entrypoint.sh"]
