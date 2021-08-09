@@ -6,7 +6,7 @@ RUN apk add --no-cache \
 		openssh-client
 RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 
-ENV DOCKER_VERSION 19.03.13
+ENV DOCKER_VERSION 20.10.8
 # TODO ENV DOCKER_SHA256
 # https://github.com/docker/docker-ce/blob/5b073ee2cf564edee5adca05eee574142f7627bb/components/packaging/static/hash_files !!
 # (no SHA file artifacts on download.docker.com yet as of 2017-06-07 though)
@@ -16,16 +16,16 @@ RUN set -eux; \
 	apkArch="$(apk --print-arch)"; \
 	case "$apkArch" in \
 		'x86_64') \
-			url='https://download.docker.com/linux/static/stable/x86_64/docker-19.03.13.tgz'; \
+			url='https://download.docker.com/linux/static/stable/x86_64/docker-20.10.8.tgz'; \
 			;; \
 		'armhf') \
-			url='https://download.docker.com/linux/static/stable/armel/docker-19.03.13.tgz'; \
+			url='https://download.docker.com/linux/static/stable/armel/docker-20.10.8.tgz'; \
 			;; \
 		'armv7') \
-			url='https://download.docker.com/linux/static/stable/armhf/docker-19.03.13.tgz'; \
+			url='https://download.docker.com/linux/static/stable/armhf/docker-20.10.8.tgz'; \
 			;; \
 		'aarch64') \
-			url='https://download.docker.com/linux/static/stable/aarch64/docker-19.03.13.tgz'; \
+			url='https://download.docker.com/linux/static/stable/aarch64/docker-20.10.8.tgz'; \
 			;; \
 		*) echo >&2 "error: unsupported architecture ($apkArch)"; exit 1 ;; \
 	esac; \
@@ -78,7 +78,7 @@ RUN set -eux; \
 	echo 'dockremap:165536:65536' >> /etc/subuid; \
 	echo 'dockremap:165536:65536' >> /etc/subgid
 
-ENV DIND_COMMIT ed89041433a031cafc0a0f19cfe573c31688d377
+ENV DIND_COMMIT 42b1175eda071c0e9121e1d64345928384a93df1
 
 RUN set -eux; \
 	wget -O /usr/local/bin/dind "https://raw.githubusercontent.com/docker/docker/${DIND_COMMIT}/hack/dind"; \
