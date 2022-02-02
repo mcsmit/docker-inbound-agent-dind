@@ -2,7 +2,7 @@
 
 
 
-dockerd-entrypoint.sh dockerd &
+dockerd-entrypoint.sh dockerd --experimental &
 
 jenkins-agent "$@"
 
