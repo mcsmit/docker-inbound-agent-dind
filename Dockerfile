@@ -90,6 +90,9 @@ COPY dockerd-entrypoint.sh /usr/local/bin/
 VOLUME /var/lib/docker
 
 # dind Dockerfile End
+RUN set -eux; \
+	wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.18.1/yq_linux_386"; \
+	chmod +x /usr/local/bin/yq
 
 # dind rootless
 # RUN apk add --no-cache iproute2
