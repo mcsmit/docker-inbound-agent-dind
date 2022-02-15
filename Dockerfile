@@ -144,7 +144,10 @@ RUN set -eux; \
 
 COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/docker-buildx
 
+RUN mkdir -p /root/.docker/buildx
+
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
 
 CMD ["entrypoint.sh"]
