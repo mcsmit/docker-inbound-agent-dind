@@ -142,6 +142,8 @@ RUN set -eux; \
 # RUN mkdir -p /var/log/supervisor
 # COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/docker-buildx
+
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
