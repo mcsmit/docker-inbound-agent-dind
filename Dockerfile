@@ -1,5 +1,8 @@
 FROM jenkins/inbound-agent:4.3-4-alpine
+
+ARG user=jenkins
 USER root
+
 # https://github.com/docker-library/docker/blob/094faa88f437cafef7aeb0cc36e75b59046cc4b9/20.10/Dockerfile
 RUN apk add --no-cache \
 		ca-certificates \
@@ -43,7 +46,9 @@ RUN set -eux; \
 	docker --version
 
 COPY modprobe.sh /usr/local/bin/modprobe
+RUN chmod +x /usr/local/bin/modprobe
 COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # https://github.com/docker-library/docker/pull/166
 #   dockerd-entrypoint.sh uses DOCKER_TLS_CERTDIR for auto-generating TLS certificates
@@ -63,6 +68,7 @@ RUN set -eux; \
 		ip6tables \
 		iptables \
 		openssl \
+    shadow \
 		shadow-uidmap \
 		xfsprogs \
 		xz \
@@ -85,7 +91,7 @@ RUN set -eux; \
 	chmod +x /usr/local/bin/dind
 
 COPY dockerd-entrypoint.sh /usr/local/bin/
-
+RUN chmod +x /usr/local/bin/dockerd-entrypoint.sh
 
 VOLUME /var/lib/docker
 
@@ -95,52 +101,49 @@ RUN set -eux; \
 	chmod +x /usr/local/bin/yq
 
 # dind rootless
-# RUN apk add --no-cache iproute2
-# RUN mkdir /run/user && chmod 1777 /run/user
-# RUN set -eux; \
-# 	adduser -h /home/rootless -g 'Rootless' -D -u 1000 rootless; \
-# 	echo 'rootless:100000:65536' >> /etc/subuid; \
-# 	echo 'rootless:100000:65536' >> /etc/subgid
+RUN apk add --no-cache iproute2
+RUN mkdir /run/user && chmod 1777 /run/user
+RUN set -eux; \
+  addgroup -g 2999 docker; \
+  usermod -aG docker ${user}; \
+	echo "${user}:100000:65536" >> /etc/subuid; \
+	echo "${user}:100000:65536" >> /etc/subgid
 
-# RUN set -eux; \
-# 	\
-# 	apkArch="$(apk --print-arch)"; \
-# 	case "$apkArch" in \
-# 		'x86_64') \
-# 			url='https://download.docker.com/linux/static/stable/x86_64/docker-rootless-extras-20.10.0.tgz'; \
-# 			;; \
-# 		*) echo >&2 "error: unsupported architecture ($apkArch)"; exit 1 ;; \
-# 	esac; \
-# 	\
-# 	wget -O rootless.tgz "$url"; \
-# 	\
-# 	tar --extract \
-# 		--file rootless.tgz \
-# 		--strip-components 1 \
-# 		--directory /usr/local/bin/ \
-# 		'docker-rootless-extras/rootlesskit' \
-# 		'docker-rootless-extras/rootlesskit-docker-proxy' \
-# 		'docker-rootless-extras/vpnkit' \
-# 	; \
-# 	rm rootless.tgz; \
-# 	\
-# 	rootlesskit --version; \
-# 	vpnkit --version
+RUN set -eux; \
+	\
+	apkArch="$(apk --print-arch)"; \
+	case "$apkArch" in \
+		'x86_64') \
+			url='https://download.docker.com/linux/static/stable/x86_64/docker-rootless-extras-20.10.0.tgz'; \
+			;; \
+		*) echo >&2 "error: unsupported architecture ($apkArch)"; exit 1 ;; \
+	esac; \
+	\
+	wget -O rootless.tgz "$url"; \
+	\
+	tar --extract \
+		--file rootless.tgz \
+		--strip-components 1 \
+		--directory /usr/local/bin/ \
+		'docker-rootless-extras/rootlesskit' \
+		'docker-rootless-extras/rootlesskit-docker-proxy' \
+		'docker-rootless-extras/vpnkit' \
+	; \
+	rm rootless.tgz; \
+	\
+	rootlesskit --version; \
+	vpnkit --version
 
-# # pre-create "/var/lib/docker" for our rootless user
-# RUN set -eux; \
-# 	mkdir -p /home/rootless/.local/share/docker; \
-# 	chown -R rootless:rootless /home/rootless/.local/share/docker
+# pre-create "/var/lib/docker" for our rootless user
+RUN set -eux; \
+	mkdir -p /home/${user}/.local/share/docker; \
+	chown -R ${user}:${user} /home/${user}/.local/share/docker
 
-# VOLUME /home/rootless/.local/share/docker
+VOLUME /home/${user}/.local/share/docker
 
-# USER rootless
-
-
-# RUN apk add supervisor
-
-# RUN mkdir -p /var/log/supervisor
-# COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN apk add supervisor
+RUN mkdir -p /var/log/supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/docker-buildx
 
@@ -149,5 +152,9 @@ RUN mkdir -p /root/.docker/buildx
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+USER ${user}
 
-CMD ["entrypoint.sh"]
+# set the non-default host port since we use the rootless user
+ENV DOCKER_HOST unix:///run/user/1000/docker.sock
+
+ENTRYPOINT [ "entrypoint.sh" ]
