@@ -1,9 +1,10 @@
-FROM jenkins/inbound-agent:4.3-4-alpine
+FROM jenkins/inbound-agent:4.11.2-4-alpine
 USER root
 # https://github.com/docker-library/docker/blob/094faa88f437cafef7aeb0cc36e75b59046cc4b9/20.10/Dockerfile
 RUN apk add --no-cache \
 		ca-certificates \
-		openssh-client
+		openssh-client \
+		curl 
 RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 
 ENV DOCKER_VERSION 20.10.8
@@ -90,57 +91,13 @@ COPY dockerd-entrypoint.sh /usr/local/bin/
 VOLUME /var/lib/docker
 
 # dind Dockerfile End
-RUN set -eux; \
-	wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.18.1/yq_linux_386"; \
-	chmod +x /usr/local/bin/yq
 
-# dind rootless
-# RUN apk add --no-cache iproute2
-# RUN mkdir /run/user && chmod 1777 /run/user
-# RUN set -eux; \
-# 	adduser -h /home/rootless -g 'Rootless' -D -u 1000 rootless; \
-# 	echo 'rootless:100000:65536' >> /etc/subuid; \
-# 	echo 'rootless:100000:65536' >> /etc/subgid
+COPY ./yq_linux_386 /usr/local/bin/yq 
+RUN chmod +x /usr/local/bin/yq
+# for some reason at one point github.com was a bad address?
+# RUN wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.18.1/yq_linux_386"; \
+# 	chmod +x /usr/local/bin/yq
 
-# RUN set -eux; \
-# 	\
-# 	apkArch="$(apk --print-arch)"; \
-# 	case "$apkArch" in \
-# 		'x86_64') \
-# 			url='https://download.docker.com/linux/static/stable/x86_64/docker-rootless-extras-20.10.0.tgz'; \
-# 			;; \
-# 		*) echo >&2 "error: unsupported architecture ($apkArch)"; exit 1 ;; \
-# 	esac; \
-# 	\
-# 	wget -O rootless.tgz "$url"; \
-# 	\
-# 	tar --extract \
-# 		--file rootless.tgz \
-# 		--strip-components 1 \
-# 		--directory /usr/local/bin/ \
-# 		'docker-rootless-extras/rootlesskit' \
-# 		'docker-rootless-extras/rootlesskit-docker-proxy' \
-# 		'docker-rootless-extras/vpnkit' \
-# 	; \
-# 	rm rootless.tgz; \
-# 	\
-# 	rootlesskit --version; \
-# 	vpnkit --version
-
-# # pre-create "/var/lib/docker" for our rootless user
-# RUN set -eux; \
-# 	mkdir -p /home/rootless/.local/share/docker; \
-# 	chown -R rootless:rootless /home/rootless/.local/share/docker
-
-# VOLUME /home/rootless/.local/share/docker
-
-# USER rootless
-
-
-# RUN apk add supervisor
-
-# RUN mkdir -p /var/log/supervisor
-# COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/docker-buildx
 
