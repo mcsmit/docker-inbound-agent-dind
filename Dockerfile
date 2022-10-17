@@ -94,6 +94,12 @@ VOLUME /var/lib/docker
 
 COPY ./yq_linux_386 /usr/local/bin/yq 
 RUN chmod +x /usr/local/bin/yq
+
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && mv kubectl /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl
+
+RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+
 # for some reason at one point github.com was a bad address?
 # RUN wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.18.1/yq_linux_386"; \
 # 	chmod +x /usr/local/bin/yq
