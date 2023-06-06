@@ -1,4 +1,4 @@
-FROM jenkins/inbound-agent:4.3-4-alpine
+FROM jenkins/inbound-agent:4.11.2-4-alpine
 
 ARG user=jenkins
 USER root
@@ -6,7 +6,8 @@ USER root
 # https://github.com/docker-library/docker/blob/094faa88f437cafef7aeb0cc36e75b59046cc4b9/20.10/Dockerfile
 RUN apk add --no-cache \
 		ca-certificates \
-		openssh-client
+		openssh-client \
+		curl python3
 RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 
 ENV DOCKER_VERSION 20.10.8
@@ -96,9 +97,18 @@ RUN chmod +x /usr/local/bin/dockerd-entrypoint.sh
 VOLUME /var/lib/docker
 
 # dind Dockerfile End
-RUN set -eux; \
-	wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.18.1/yq_linux_386"; \
-	chmod +x /usr/local/bin/yq
+
+COPY ./yq_linux_386 /usr/local/bin/yq 
+RUN chmod +x /usr/local/bin/yq
+
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && mv kubectl /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl
+
+RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+
+# for some reason at one point github.com was a bad address?
+# RUN wget -O /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.18.1/yq_linux_386"; \
+# 	chmod +x /usr/local/bin/yq
 
 # dind rootless
 RUN apk add --no-cache iproute2
