@@ -8,6 +8,7 @@ RUN apk add --no-cache \
 		ca-certificates \
 		openssh-client \
 		curl python3
+RUN apk upgrade
 RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 
 ENV DOCKER_VERSION 20.10.8
